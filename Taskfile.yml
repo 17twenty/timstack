@@ -1,0 +1,35 @@
+# https://taskfile.dev
+
+version: '3'
+
+dotenv: ['.env', '{{.ENV}}.env.']
+
+tasks:
+  default:
+    cmds:
+      - echo "Try --list-all to list all tasks"
+    silent: true
+  dev:
+    cmds:
+      - tailwindcss -i ./tailwind.css -o ./static/css/main.css
+      - go generate
+      - go build -o ./mybin
+    silent: true
+  prod:
+    cmds:
+      - tailwindcss -i ./tailwind.css -o ./static/css/main.css --minify
+      - go generate
+      - go build -o ./mybin
+    silent: true
+  run:
+    deps: [dev]
+    cmds:
+      - ./mybin
+  run-prod:
+    deps: [prod]
+    cmds:
+      - ./mybin
+  live:
+    cmds:
+      - air
+    silent: true

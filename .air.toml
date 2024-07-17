@@ -1,0 +1,29 @@
+root = "."
+testdata_dir = "testdata"
+tmp_folder = "."
+
+[build]
+  bin = "./mybin"
+  pre_cmd = ["task dev"]
+  post_cmd = ["rm -f ./mybin"]
+  delay = 150
+  exclude_dir = ["assets", "database/store", "tmp", "vendor", "testdata"]
+  exclude_file = []
+  include_dir = []
+  include_ext = ["go", "tpl", "js", "tmpl", "html", "sql"]
+  include_file = []
+  rerun = true
+  rerun_delay = 200
+  stop_on_error = false
+
+[misc]
+  clean_on_exit = true
+
+[proxy]
+  enabled = true
+  proxy_port = 9090
+  app_port = 9005
+
+[screen]
+  clear_on_rebuild = false
+  keep_scroll = true

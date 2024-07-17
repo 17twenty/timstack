@@ -1,0 +1,35 @@
+<div
+  class="fixed top-0 z-10 flex w-full flex-col items-center justify-center space-y-2"
+>
+  {{ if eq .Type "Warning" }}
+  <div
+    class="border-l-8 border-orange-500 bg-orange-100 p-4 text-sm text-orange-700 shadow-lg"
+    role="alert"
+    style="cursor: pointer"
+    onclick="this.remove()"
+  >
+    <p class="font-bold">{{ .Title }}</p>
+    <p>{{ .Content }}</p>
+  </div>
+  {{end}} {{ if eq .Type "Success" }}
+  <div
+    class="border-l-8 border-green-500 bg-green-100 p-4 text-sm text-green-600 shadow-lg"
+    role="alert"
+    style="cursor: pointer"
+    onclick="this.remove()"
+  >
+    <p class="font-bold">{{ .Title }}</p>
+    <p>{{ .Content }}</p>
+  </div>
+  {{end}} {{ if eq .Type "Info" }}
+  <div
+    class="border-l-8 border-blue-500 bg-blue-100 p-4 text-sm text-blue-600 shadow-lg"
+    role="alert"
+    style="cursor: pointer"
+    onclick="this.remove()"
+  >
+    <p class="font-bold">{{ .Title }}</p>
+    <p>{{ .Content }}</p>
+  </div>
+  {{end}}
+</div>

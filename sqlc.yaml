@@ -1,0 +1,26 @@
+---
+version: "1"
+packages:
+  - name: store
+    path: database/store
+    schema: database/migrations/
+    queries: database/queries/
+    engine: postgresql
+    emit_interface: false
+    emit_exact_table_names: false
+    emit_empty_slices: true
+overrides:
+  - db_type: uuid
+    go_type:
+      import: github.com/gofrs/uuid/v3
+      package: uuid
+      type: UUID
+    nullable: false
+  - db_type: uuid
+    go_type:
+      import: github.com/gofrs/uuid/v3
+      package: uuid
+      type: NullUUID
+    nullable: true
+  - go_type: github.com/shopspring/decimal.Decimal
+    db_type: pg_catalog.numeric
