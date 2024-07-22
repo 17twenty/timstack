@@ -50,9 +50,9 @@ func CreateArgon2HashFromPassword(password string) string {
 	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, mem, time, pthreads, b64Salt, b64Hash)
 }
 
-// ArgonHashMatchesPlaintext
+// Argon2HashMatchesPlaintext is used to match argon2ID for secure passwords
 // We compare of the form $argon2id$v=19$m=16,t=2,p=1$dzR5bVM4U2VmWDdvT1J5cQ$b79Ih2lTBIdLb1XfwA2DkA
-func ArgonHashMatchesPlaintext(hashedPassword string, plainPassword string) bool {
+func Argon2HashMatchesPlaintext(hashedPassword string, plainPassword string) bool {
 
 	vals := strings.Split(hashedPassword, "$")
 	if len(vals) != 6 && vals[1] != fmt.Sprintf("v=%d", argon2.Version) {
