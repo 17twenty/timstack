@@ -32,7 +32,8 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// Set no caching
+	// Set caching preference
+	// Could use Cache-Control: no-store
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
 			wr.Header().Set("Cache-Control", "max-age=0, must-revalidate")
@@ -76,7 +77,7 @@ func main() {
   <h1 class="text-6xl">
     Welcome to
     <strong class="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
-      TimStack
+      NickStack
     </strong> 👋
   </h1>
 </div>
