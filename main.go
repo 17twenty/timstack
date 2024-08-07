@@ -1,19 +1,25 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
+	"timstack/database/store"
 	"timstack/internal/env"
 	"timstack/internal/flash"
+	"timstack/passkey"
 
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
 
 var (
-	logger *slog.Logger
+	logger  *slog.Logger
+	queries *store.Queries
 )
 
 func main() {
@@ -32,14 +38,33 @@ func main() {
 
 	r := mux.NewRouter()
 
+	var dbHost string
+	if mode == "dev" {
+		dbHost = "postgres://joshtheeuf:jc194980@localhost:5432/passkey?sslmode=disable"
+	} else {
+		dbHost = "postgres://postgres:jc194980!@ec2-13-210-207-191.ap-southeast-2.compute.amazonaws.com:5432/videoEditor"
+	}
+	// setup a database handler queries
+	db, dbConnectionError := sql.Open("postgres", dbHost)
+	if dbConnectionError != nil {
+		logger.Error("Error connecting to host", "error", dbConnectionError)
+	}
+	ctx := context.Background()
+	err := db.PingContext(ctx)
+	if err != nil {
+		logger.Error("Error pinging host", "error", err.Error())
+	}
+
+	queries = store.New(db)
+
 	// Set caching preference
 	// Could use Cache-Control: no-store
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
-			wr.Header().Set("Cache-Control", "max-age=0, must-revalidate")
-			next.ServeHTTP(wr, req)
-		})
-	})
+	// r.Use(func(next http.Handler) http.Handler {
+	// 	return http.HandlerFunc(func(wr http.ResponseWriter, req *http.Request) {
+	// 		wr.Header().Set("Cache-Control", "max-age=0, must-revalidate")
+	// 		next.ServeHTTP(wr, req)
+	// 	})
+	// })
 
 	// Setup static file handling
 	fs := http.FileServer(http.Dir("static"))
@@ -86,6 +111,14 @@ func main() {
 		w.Header().Set("Content-Type", "text/html")
 		fmt.Fprint(w, helloWorld)
 	})
+
+	r.HandleFunc("/api/passkey/registerStart", passkey.BeginRegistration)
+	r.HandleFunc("/api/passkey/registerFinish", passkey.FinishRegistration)
+	r.HandleFunc("/api/passkey/loginStart", passkey.BeginLogin)
+	r.HandleFunc("/api/passkey/loginFinish", passkey.FinishLogin)
+
+	// Login Page
+	r.HandleFunc("/login", catchAllAndRouteToStatic())
 
 	host := fmt.Sprintf("0.0.0.0:%d", port)
 	logger.Info("Your app is running on", "host", host)
