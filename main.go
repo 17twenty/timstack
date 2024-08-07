@@ -41,7 +41,7 @@ func main() {
 
 	var dbHost string
 	if mode == "dev" {
-
+		dbHost = "postgres://joshtheeuf:jc194980@localhost:5432/passkey?sslmode=disable"
 	} else {
 
 	}

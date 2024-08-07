@@ -95,9 +95,11 @@ func (u *User) UpdateCredential(credential *webauthn.Credential) error {
 type PasskeyStore interface {
 	GetUser(username string) (PasskeyUser, error)
 	SaveUser(PasskeyUser) error
+	UpdateUser(PasskeyUser) error
 	CreateSession(userID string) (string, error)
 	GetSession(token string) (webauthn.SessionData, error)
 	DeleteSession(token string) error
+	CreateSessionWithData(userID string, sessionData webauthn.SessionData) (string, error)
 }
 
 // DBStore struct
@@ -165,18 +167,65 @@ func (s *DBStore) SaveUser(user PasskeyUser) error {
 	return nil
 }
 
+// Update User function
+func (s *DBStore) UpdateUser(user PasskeyUser) error {
+	u, ok := user.(*User)
+	if !ok {
+		return fmt.Errorf("invalid user type")
+	}
+
+	// Ensure CredentialsRaw is up to date
+	raw, err := json.Marshal(u.credentials)
+	if err != nil {
+		return fmt.Errorf("failed to marshal credentials: %w", err)
+	}
+	u.CredentialsRaw = raw
+
+	dbUser := store.UpdateUserParams{
+		ID:          u.ID,
+		DisplayName: u.DisplayName,
+		Name:        u.Name,
+		Credentials: pqtype.NullRawMessage{RawMessage: u.CredentialsRaw, Valid: true},
+		// CreatedAt and UpdatedAt will be set by the database
+	}
+	_, err = s.queries.UpdateUser(context.Background(), dbUser)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // CreateSession function
 func (s *DBStore) CreateSession(userID string) (string, error) {
-
 	sessionID := uuid.NewString()
+	log.Println("Session Being Created Here")
+
+	// Create a new SessionData with a challenge
+	sessionData := webauthn.SessionData{
+		UserID:    []byte(userID),
+		Challenge: "",
+		// Set other necessary fields...
+	}
+
+	// Marshal the sessionData to JSON
+	sessionDataJSON, err := json.Marshal(sessionData)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal session data: %w", err)
+	}
+
 	session := store.InsertIntoSessionsParams{
 		ID:      sessionID,
 		UserID:  userID,
-		Data:    pqtype.NullRawMessage{RawMessage: []byte("{}"), Valid: true}, // Initialize with empty JSON object
-		Expires: time.Now().Add(time.Hour),                                    // Adjust expiration as needed
+		Data:    pqtype.NullRawMessage{RawMessage: sessionDataJSON, Valid: true},
+		Expires: time.Now().Add(5 * time.Minute), // Adjust expiration as needed
 	}
-	_, err := s.queries.InsertIntoSessions(context.Background(), session)
-	return sessionID, err
+
+	_, err = s.queries.InsertIntoSessions(context.Background(), session)
+	if err != nil {
+		return "", fmt.Errorf("failed to insert session: %w", err)
+	}
+
+	return sessionID, nil
 }
 
 // GetSession function
@@ -205,4 +254,30 @@ func (s *DBStore) GetSession(token string) (webauthn.SessionData, error) {
 // DeleteSession function
 func (s *DBStore) DeleteSession(token string) error {
 	return s.queries.DeleteSession(context.Background(), token)
+}
+
+func (s *DBStore) CreateSessionWithData(userID string, sessionData webauthn.SessionData) (string, error) {
+	sessionID := uuid.NewString()
+	log.Println("Session Being Created Here")
+
+	// Marshal the sessionData to JSON
+	sessionDataJSON, err := json.Marshal(sessionData)
+	log.Println(sessionDataJSON)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal session data: %w", err)
+	}
+
+	session := store.InsertIntoSessionsParams{
+		ID:      sessionID,
+		UserID:  userID,
+		Data:    pqtype.NullRawMessage{RawMessage: sessionDataJSON, Valid: true},
+		Expires: time.Now().Add(5 * time.Minute), // Adjust expiration as needed
+	}
+
+	_, err = s.queries.InsertIntoSessions(context.Background(), session)
+	if err != nil {
+		return "", fmt.Errorf("failed to insert session: %w", err)
+	}
+
+	return sessionID, nil
 }

@@ -21,15 +21,27 @@ var (
 
 func init() {
 	// Initialize passkeyStore in the init function
-	dbHost := ""
+	dbHost := "postgres://joshtheeuf:jc194980@localhost:5432/passkey?sslmode=disable"
 	db, err := sql.Open("postgres", dbHost)
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
 	}
 
+	// Create a new DBStore instance
 	passkeyStore, err = CustomeTypes.NewDBStore(db)
 	if err != nil {
 		log.Fatal("Error creating DBStore:", err)
+	}
+
+	// Initialize webAuthn
+	webAuthn, err = webauthn.New(&webauthn.Config{
+		RPID:          "localhost",
+		RPDisplayName: "Example Website",
+		RPOrigin:      "http://localhost:9005",
+		Timeout:       30000,
+	})
+	if err != nil {
+		log.Fatal("Error creating webAuthn instance:", err)
 	}
 }
 

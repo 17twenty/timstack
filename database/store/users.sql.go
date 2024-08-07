@@ -54,6 +54,16 @@ func (q *Queries) DeleteSession(ctx context.Context, id string) error {
 	return err
 }
 
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
 const getSession = `-- name: GetSession :one
 SELECT id, user_id, data, expires FROM sessions
 WHERE id = $1 LIMIT 1
@@ -154,6 +164,41 @@ func (q *Queries) InsertIntoSessions(ctx context.Context, arg InsertIntoSessions
 		&i.UserID,
 		&i.Data,
 		&i.Expires,
+	)
+	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET display_name = $2,
+    name = $3,
+    credentials = $4
+WHERE id = $1
+RETURNING id, display_name, name, credentials, created_at, updated_at
+`
+
+type UpdateUserParams struct {
+	ID          string
+	DisplayName string
+	Name        string
+	Credentials pqtype.NullRawMessage
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.ID,
+		arg.DisplayName,
+		arg.Name,
+		arg.Credentials,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.DisplayName,
+		&i.Name,
+		&i.Credentials,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

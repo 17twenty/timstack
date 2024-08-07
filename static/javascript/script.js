@@ -35,6 +35,7 @@ async function register() {
         const attestationResponse = await SimpleWebAuthnBrowser.startRegistration(options.publicKey);  
 
         // Send attestationResponse back to server for verification and storage.  
+        console.log(JSON.stringify(attestationResponse))
         const verificationResponse = await fetch('/api/passkey/registerFinish', {  
             method: 'POST',  
             headers: {  

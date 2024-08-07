@@ -28,3 +28,16 @@ WHERE name = $1 LIMIT 1;
 -- name: GetUserById :one
 SELECT * FROM users
 WHERE id = $1 LIMIT 1;
+
+
+-- name: UpdateUser :one
+UPDATE users
+SET display_name = $2,
+    name = $3,
+    credentials = $4
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteUser :exec
+DELETE FROM users
+WHERE id = $1;

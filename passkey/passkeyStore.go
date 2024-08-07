@@ -22,7 +22,7 @@ var (
 
 func init() {
 	// Initialize passkeyStore in the init function
-	dbHost := ""
+	dbHost := "postgres://joshtheeuf:jc194980@localhost:5432/passkey?sslmode=disable"
 	db, err := sql.Open("postgres", dbHost)
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
@@ -38,7 +38,7 @@ func init() {
 		RPID:          "localhost",
 		RPDisplayName: "Example Website",
 		RPOrigin:      "http://localhost:9005",
-		Timeout:       30,
+		Timeout:       30000,
 	})
 	if err != nil {
 		log.Fatal("Error creating webAuthn instance:", err)
@@ -49,13 +49,12 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[INFO] begin registration ----------------------\\")
 
 	username, err := getUsername(r)
-	log.Println(username)
+
 	if err != nil {
 		log.Printf("[ERROR] can't get user name: %s", err.Error())
 		http.Error(w, "Invalid username", http.StatusBadRequest)
 		return
 	}
-	log.Println(username)
 
 	user, err := passkeyStore.GetUser(username)
 	if err != nil {
@@ -69,7 +68,7 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 		err = passkeyStore.SaveUser(user)
 		log.Println(user)
 		if err != nil {
-			log.Printf("[ERROR] can't save user: %s", err.Error())
+			log.Printf("[ERROR] can't save user 71: %s", err.Error())
 			JSONResponse(w, "", "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -77,15 +76,15 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[INFO] user already exists")
 	}
 
-	options, _, err := webAuthn.BeginRegistration(user)
+	options, sessionData, err := webAuthn.BeginRegistration(user)
 	if err != nil {
 		log.Printf("[ERROR] can't begin registration: %s", err.Error())
 		JSONResponse(w, "", fmt.Sprintf("Can't begin registration: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
-	// Create session
-	sessionID, err := passkeyStore.CreateSession(string(user.WebAuthnID()))
+	// Create session with the sessionData
+	sessionID, err := passkeyStore.CreateSessionWithData(string(user.WebAuthnID()), *sessionData)
 	if err != nil {
 		log.Printf("[ERROR] can't create session: %s", err.Error())
 		JSONResponse(w, "", "Internal server error", http.StatusInternalServerError)
@@ -97,7 +96,10 @@ func BeginRegistration(w http.ResponseWriter, r *http.Request) {
 
 func FinishRegistration(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.Header.Get("Session-Key")
+	log.Println("sessionID: " + sessionID)
 	session, err := passkeyStore.GetSession(sessionID)
+	log.Println("session user id: ", string(session.UserID))
+
 	if err != nil {
 		log.Printf("[ERROR] can't get session: %s", err.Error())
 		JSONResponse(w, "", "Invalid session", http.StatusBadRequest)
@@ -111,6 +113,9 @@ func FinishRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("user: ", user)
+	log.Println("session challenge: ", string(session.Challenge))
+	log.Println("r: ", r)
 	credential, err := webAuthn.FinishRegistration(user, session, r)
 	if err != nil {
 		log.Printf("[ERROR] can't finish registration: %s", err.Error())
@@ -119,9 +124,9 @@ func FinishRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.AddCredential(credential)
-	err = passkeyStore.SaveUser(user)
+	err = passkeyStore.UpdateUser(user)
 	if err != nil {
-		log.Printf("[ERROR] can't save user: %s", err.Error())
+		log.Printf("[ERROR] can't save user 129: %s", err.Error())
 		JSONResponse(w, "", "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -203,9 +208,9 @@ func FinishLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = passkeyStore.SaveUser(user)
+	err = passkeyStore.UpdateUser(user)
 	if err != nil {
-		log.Printf("[ERROR] can't save user: %s", err.Error())
+		log.Printf("[ERROR] can't save user 213: %s", err.Error())
 		JSONResponse(w, "", "Internal server error", http.StatusInternalServerError)
 		return
 	}
