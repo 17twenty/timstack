@@ -186,6 +186,11 @@ func (s *DBStore) GetSession(token string) (webauthn.SessionData, error) {
 		return webauthn.SessionData{}, err
 	}
 
+	// custom error message session has expired
+	if session.Expires.Before(time.Now()) {
+		return webauthn.SessionData{}, fmt.Errorf("session has expired")
+	}
+
 	var sessionData webauthn.SessionData
 	err = json.Unmarshal(session.Data.RawMessage, &sessionData) // Use Bytes() method
 	if err != nil {
