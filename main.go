@@ -11,6 +11,7 @@ import (
 	"timstack/database/store"
 	"timstack/internal/env"
 	"timstack/internal/flash"
+	"timstack/middleware"
 	"timstack/passkey"
 
 	"github.com/gorilla/mux"
@@ -120,7 +121,16 @@ func main() {
 	// Login Page
 	r.HandleFunc("/login", catchAllAndRouteToStatic())
 
+	http.HandleFunc("/private", func(w http.ResponseWriter, r *http.Request) {
+		middleware.LoggedInMiddleware(http.HandlerFunc(PrivatePage)).ServeHTTP(w, r)
+	})
+
 	host := fmt.Sprintf("0.0.0.0:%d", port)
 	logger.Info("Your app is running on", "host", host)
 	log.Fatal(http.ListenAndServe(host, r))
+}
+
+func PrivatePage(w http.ResponseWriter, r *http.Request) {
+	// just show "Hello, World!" for now
+	_, _ = w.Write([]byte("Hello, World!"))
 }
