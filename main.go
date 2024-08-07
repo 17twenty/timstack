@@ -40,9 +40,9 @@ func main() {
 
 	var dbHost string
 	if mode == "dev" {
-		dbHost = "postgres://joshtheeuf:jc194980@localhost:5432/passkey?sslmode=disable"
+
 	} else {
-		dbHost = "postgres://postgres:jc194980!@ec2-13-210-207-191.ap-southeast-2.compute.amazonaws.com:5432/videoEditor"
+
 	}
 	// setup a database handler queries
 	db, dbConnectionError := sql.Open("postgres", dbHost)

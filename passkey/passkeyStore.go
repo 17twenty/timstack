@@ -22,7 +22,7 @@ var (
 
 func init() {
 	// Initialize passkeyStore in the init function
-	dbHost := "postgres://joshtheeuf:jc194980@localhost:5432/passkey?sslmode=disable"
+	dbHost := ""
 	db, err := sql.Open("postgres", dbHost)
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
