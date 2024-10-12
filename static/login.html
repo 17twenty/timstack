@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tim Stack</title>
+    <link rel="icon" type="image/x-icon" href="static/img/favicon.ico">
+    <script
+      src="https://unpkg.com/htmx.org@1.9.10"
+      integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+    <link href="/static/css/main.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="flex items-center justify-center h-screen">
+        <div class="bg-light p-5 rounded w-1/2">
+          <h1 class="mb-4 text-center">🔑 Passkey</h1>
+          <div class="text-center" id="message"></div>
+          <div class="mb-3">
+            <input type="text" class="form-control" id="username" placeholder="username">
+          </div>
+          <div class="flex gap-2">
+            <button class="btn btn-primary w-full" id="registerButton">Register</button>
+            <button class="btn btn-primary w-full" id="loginButton">Login</button>
+          </div>
+        </div>
+      </div>
+    <script src="/static/javascript/script.js"></script>  
+</body>
+</html>
